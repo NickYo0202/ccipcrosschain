@@ -18,8 +18,8 @@ module.exports = {
   },
   networks:{
     sepolia:{
-      url: SEPOLIA_RPC_URL !== undefined ? SEPOLIA_RPC_URL : "",
-      accounts: PRIVATE_KEY !== undefined ? [PRIVATE_KEY] : [],
+      url: SEPOLIA_RPC_URL,
+      accounts: [PRIVATE_KEY] ,
       chainId: 11155111,
       blockConfirmations: 6,
       companionNetworks:{
@@ -27,8 +27,8 @@ module.exports = {
       }
     },
     amoy:{
-      url: AMOY_RPC_URL !== undefined ? AMOY_RPC_URL : "",
-      accounts: PRIVATE_KEY !== undefined ? [PRIVATE_KEY] : [],
+      url: AMOY_RPC_URL,
+      accounts: [PRIVATE_KEY] ,
       chainId: 80002,
       blockConfirmations: 6,
       companionNetworks:{
