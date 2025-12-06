@@ -1,0 +1,411 @@
+package com.crosschain.nft.contracts;
+
+import io.reactivex.Flowable;
+import io.reactivex.functions.Function;
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.Callable;
+import org.web3j.abi.EventEncoder;
+import org.web3j.abi.FunctionEncoder;
+import org.web3j.abi.TypeReference;
+import org.web3j.abi.datatypes.Address;
+import org.web3j.abi.datatypes.Bool;
+import org.web3j.abi.datatypes.DynamicBytes;
+import org.web3j.abi.datatypes.Event;
+import org.web3j.abi.datatypes.Type;
+import org.web3j.abi.datatypes.Utf8String;
+import org.web3j.abi.datatypes.generated.Bytes32;
+import org.web3j.abi.datatypes.generated.Uint256;
+import org.web3j.abi.datatypes.generated.Uint64;
+import org.web3j.crypto.Credentials;
+import org.web3j.protocol.Web3j;
+import org.web3j.protocol.core.DefaultBlockParameter;
+import org.web3j.protocol.core.RemoteCall;
+import org.web3j.protocol.core.RemoteFunctionCall;
+import org.web3j.protocol.core.methods.request.EthFilter;
+import org.web3j.protocol.core.methods.response.BaseEventResponse;
+import org.web3j.protocol.core.methods.response.Log;
+import org.web3j.protocol.core.methods.response.TransactionReceipt;
+import org.web3j.tuples.generated.Tuple2;
+import org.web3j.tx.Contract;
+import org.web3j.tx.TransactionManager;
+import org.web3j.tx.gas.ContractGasProvider;
+
+/**
+ * <p>Auto generated code.
+ * <p><strong>Do not modify!</strong>
+ * <p>Please use the <a href="https://docs.web3j.io/command_line.html">web3j command line tools</a>,
+ * or the org.web3j.codegen.SolidityFunctionWrapperGenerator in the 
+ * <a href="https://github.com/web3j/web3j/tree/master/codegen">codegen module</a> to update.
+ *
+ * <p>Generated with web3j version 4.8.7.
+ */
+@SuppressWarnings("rawtypes")
+public class NFTPoolBurnAndMint extends Contract {
+    public static final String BINARY = "0x60a060405234801561001057600080fd5b50604051612aae380380612aae833981810160405281019061003291906103ed565b3380600085600073ffffffffffffffffffffffffffffffffffffffff168173ffffffffffffffffffffffffffffffffffffffff16036100a95760006040517fd7f733340000000000000000000000000000000000000000000000000000000081526004016100a0919061044f565b60405180910390fd5b8073ffffffffffffffffffffffffffffffffffffffff1660808173ffffffffffffffffffffffffffffffffffffffff168152505050600073ffffffffffffffffffffffffffffffffffffffff168273ffffffffffffffffffffffffffffffffffffffff160361014d576040517f08c379a0000000000000000000000000000000000000000000000000000000008152600401610144906104c7565b60405180910390fd5b816000806101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff160217905550600073ffffffffffffffffffffffffffffffffffffffff168173ffffffffffffffffffffffffffffffffffffffff16146101d1576101d08161025e60201b60201c565b5b50505081600460006101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff16021790555080600560006101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff160217905550505050610553565b3373ffffffffffffffffffffffffffffffffffffffff168173ffffffffffffffffffffffffffffffffffffffff16036102cc576040517f08c379a00000000000000000000000000000000000000000000000000000000081526004016102c390610533565b60405180910390fd5b80600160006101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff1602179055508073ffffffffffffffffffffffffffffffffffffffff1660008054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff167fed8889f560326eb138920d842192f0eb3dd22b4f139c87a2c57538e05bae127860405160405180910390a350565b600080fd5b600073ffffffffffffffffffffffffffffffffffffffff82169050919050565b60006103ba8261038f565b9050919050565b6103ca816103af565b81146103d557600080fd5b50565b6000815190506103e7816103c1565b92915050565b6000806000606084860312156104065761040561038a565b5b6000610414868287016103d8565b9350506020610425868287016103d8565b9250506040610436868287016103d8565b9150509250925092565b610449816103af565b82525050565b60006020820190506104646000830184610440565b92915050565b600082825260208201905092915050565b7f43616e6e6f7420736574206f776e657220746f207a65726f0000000000000000600082015250565b60006104b160188361046a565b91506104bc8261047b565b602082019050919050565b600060208201905081810360008301526104e0816104a4565b9050919050565b7f43616e6e6f74207472616e7366657220746f2073656c66000000000000000000600082015250565b600061051d60178361046a565b9150610528826104e7565b602082019050919050565b6000602082019050818103600083015261054c81610510565b9050919050565b60805161254061056e600039600061085f01526125406000f3fe6080604052600436106100a05760003560e01c806385572ffb1161006457806385572ffb1461017e5780638da5cb5b146101a75780639c046b1b146101d2578063b0f479a1146101fd578063b1bafd3814610228578063f2fde38b14610265576100a7565b806301ffc9a7146100ac578063263596a5146100e95780633aeac4e11461011557806351cff8d91461013e57806379ba509714610167576100a7565b366100a757005b600080fd5b3480156100b857600080fd5b506100d360048036038101906100ce91906115f9565b61028e565b6040516100e09190611641565b60405180910390f35b3480156100f557600080fd5b506100fe610360565b60405161010c929190611705565b60405180910390f35b34801561012157600080fd5b5061013c60048036038101906101379190611793565b6103fd565b005b34801561014a57600080fd5b50610165600480360381019061016091906117d3565b6104ed565b005b34801561017357600080fd5b5061017c6105eb565b005b34801561018a57600080fd5b506101a560048036038101906101a09190611824565b610780565b005b3480156101b357600080fd5b506101bc61080c565b6040516101c9919061187c565b60405180910390f35b3480156101de57600080fd5b506101e7610835565b6040516101f491906118f6565b60405180910390f35b34801561020957600080fd5b5061021261085b565b60405161021f919061187c565b60405180910390f35b34801561023457600080fd5b5061024f600480360381019061024a9190611987565b610883565b60405161025c91906119ee565b60405180910390f35b34801561027157600080fd5b5061028c600480360381019061028791906117d3565b6109e5565b005b60007f85572ffb000000000000000000000000000000000000000000000000000000007bffffffffffffffffffffffffffffffffffffffffffffffffffffffff1916827bffffffffffffffffffffffffffffffffffffffffffffffffffffffff1916148061035957507f01ffc9a7000000000000000000000000000000000000000000000000000000007bffffffffffffffffffffffffffffffffffffffffffffffffffffffff1916827bffffffffffffffffffffffffffffffffffffffffffffffffffffffff1916145b9050919050565b60006060600254600380805461037590611a38565b80601f01602080910402602001604051908101604052809291908181526020018280546103a190611a38565b80156103ee5780601f106103c3576101008083540402835291602001916103ee565b820191906000526020600020905b8154815290600101906020018083116103d157829003601f168201915b50505050509050915091509091565b6104056109f9565b60008173ffffffffffffffffffffffffffffffffffffffff166370a08231306040518263ffffffff1660e01b8152600401610440919061187c565b602060405180830381865afa15801561045d573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906104819190611a7e565b9050600081036104bd576040517fd0d04f6000000000000000000000000000000000000000000000000000000000815260040160405180910390fd5b6104e883828473ffffffffffffffffffffffffffffffffffffffff16610a899092919063ffffffff16565b505050565b6104f56109f9565b600047905060008103610534576040517fd0d04f6000000000000000000000000000000000000000000000000000000000815260040160405180910390fd5b60008273ffffffffffffffffffffffffffffffffffffffff168260405161055a90611adc565b60006040518083038185875af1925050503d8060008114610597576040519150601f19603f3d011682016040523d82523d6000602084013e61059c565b606091505b50509050806105e6573383836040517f9d11f5630000000000000000000000000000000000000000000000000000000081526004016105dd93929190611b00565b60405180910390fd5b505050565b600160009054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff161461067b576040517f08c379a000000000000000000000000000000000000000000000000000000000815260040161067290611b83565b60405180910390fd5b60008060009054906101000a900473ffffffffffffffffffffffffffffffffffffffff169050336000806101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff1602179055506000600160006101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff1602179055503373ffffffffffffffffffffffffffffffffffffffff168173ffffffffffffffffffffffffffffffffffffffff167f8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e060405160405180910390a350565b61078861085b565b73ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff16146107f757336040517fd7f733340000000000000000000000000000000000000000000000000000000081526004016107ee919061187c565b60405180910390fd5b6108098161080490611f06565b610b08565b50565b60008060009054906101000a900473ffffffffffffffffffffffffffffffffffffffff16905090565b600560009054906101000a900473ffffffffffffffffffffffffffffffffffffffff1681565b60007f0000000000000000000000000000000000000000000000000000000000000000905090565b6000600560009054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff166323b872dd3330886040518463ffffffff1660e01b81526004016108e493929190611b00565b600060405180830381600087803b1580156108fe57600080fd5b505af1158015610912573d6000803e3d6000fd5b50505050600560009054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff166342966c68866040518263ffffffff1660e01b81526004016109719190611f19565b600060405180830381600087803b15801561098b57600080fd5b505af115801561099f573d6000803e3d6000fd5b50505050600084866040516020016109b8929190611f34565b604051602081830303815290604052905060006109d6858584610c04565b90508092505050949350505050565b6109ed6109f9565b6109f68161103c565b50565b60008054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff1614610a87576040517f08c379a0000000000000000000000000000000000000000000000000000000008152600401610a7e90611fa9565b60405180910390fd5b565b610b03838473ffffffffffffffffffffffffffffffffffffffff1663a9059cbb8585604051602401610abc929190611f34565b604051602081830303815290604052915060e01b6020820180517bffffffffffffffffffffffffffffffffffffffffffffffffffffffff8381831617835250505050611168565b505050565b60008160600151806020019051810190610b22919061202e565b9050600081602001519050600082600001519050600560009054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16638a7fea8282846040518363ffffffff1660e01b8152600401610b93929190611f34565b600060405180830381600087803b158015610bad57600080fd5b505af1158015610bc1573d6000803e3d6000fd5b505050507fb9144c96c86541f6fa89c9f2f02495cccf4b08cd6643e26d34ee00aa586558a88183604051610bf6929190611f34565b60405180910390a150505050565b600080610c348484600460009054906101000a900473ffffffffffffffffffffffffffffffffffffffff166111ff565b905060003073ffffffffffffffffffffffffffffffffffffffff1663b0f479a16040518163ffffffff1660e01b8152600401602060405180830381865afa158015610c83573d6000803e3d6000fd5b505050506040513d601f19601f82011682018060405250810190610ca7919061205b565b905060008173ffffffffffffffffffffffffffffffffffffffff166320487ded88856040518363ffffffff1660e01b8152600401610ce6929190612273565b602060405180830381865afa158015610d03573d6000803e3d6000fd5b505050506040513d601f19601f82011682018060405250810190610d279190611a7e565b9050600460009054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff166370a08231306040518263ffffffff1660e01b8152600401610d84919061187c565b602060405180830381865afa158015610da1573d6000803e3d6000fd5b505050506040513d601f19601f82011682018060405250810190610dc59190611a7e565b811115610ea657600460009054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff166370a08231306040518263ffffffff1660e01b8152600401610e27919061187c565b602060405180830381865afa158015610e44573d6000803e3d6000fd5b505050506040513d601f19601f82011682018060405250810190610e689190611a7e565b816040517f8f0f4206000000000000000000000000000000000000000000000000000000008152600401610e9d9291906122a3565b60405180910390fd5b600460009054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff1663095ea7b383836040518363ffffffff1660e01b8152600401610f03929190611f34565b6020604051808303816000875af1158015610f22573d6000803e3d6000fd5b505050506040513d601f19601f82011682018060405250810190610f4691906122f8565b508173ffffffffffffffffffffffffffffffffffffffff166396f4e9f988856040518363ffffffff1660e01b8152600401610f82929190612273565b6020604051808303816000875af1158015610fa1573d6000803e3d6000fd5b505050506040513d601f19601f82011682018060405250810190610fc5919061233a565b93508667ffffffffffffffff16847f3d8a9f055772202d2c3c1fddbad930d3dbe588d8692b75b84cee0719462829118888600460009054906101000a900473ffffffffffffffffffffffffffffffffffffffff168660405161102a94939291906123b1565b60405180910390a35050509392505050565b3373ffffffffffffffffffffffffffffffffffffffff168173ffffffffffffffffffffffffffffffffffffffff16036110aa576040517f08c379a00000000000000000000000000000000000000000000000000000000081526004016110a190612449565b60405180910390fd5b80600160006101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff1602179055508073ffffffffffffffffffffffffffffffffffffffff1660008054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff167fed8889f560326eb138920d842192f0eb3dd22b4f139c87a2c57538e05bae127860405160405180910390a350565b6000611193828473ffffffffffffffffffffffffffffffffffffffff166112e290919063ffffffff16565b905060008151141580156111b85750808060200190518101906111b691906122f8565b155b156111fa57826040517f5274afe70000000000000000000000000000000000000000000000000000000081526004016111f1919061187c565b60405180910390fd5b505050565b611207611518565b6040518060a0016040528085604051602001611223919061187c565b6040516020818303038152906040528152602001848152602001600067ffffffffffffffff81111561125857611257611ba8565b5b60405190808252806020026020018201604052801561129157816020015b61127e61155d565b8152602001906001900390816112765790505b5081526020018373ffffffffffffffffffffffffffffffffffffffff1681526020016112d6604051806040016040528062030d408152602001600115158152506112f8565b81525090509392505050565b60606112f083836000611377565b905092915050565b606063181dcf1060e01b8260405160240161131391906124a7565b604051602081830303815290604052907bffffffffffffffffffffffffffffffffffffffffffffffffffffffff19166020820180517bffffffffffffffffffffffffffffffffffffffffffffffffffffffff83818316178352505050509050919050565b6060814710156113be57306040517fcd7860590000000000000000000000000000000000000000000000000000000081526004016113b5919061187c565b60405180910390fd5b6000808573ffffffffffffffffffffffffffffffffffffffff1684866040516113e791906124f3565b60006040518083038185875af1925050503d8060008114611424576040519150601f19603f3d011682016040523d82523d6000602084013e611429565b606091505b5091509150611439868383611444565b925050509392505050565b60608261145957611454826114d3565b6114cb565b60008251148015611481575060008473ffffffffffffffffffffffffffffffffffffffff163b145b156114c357836040517f9996b3150000000000000000000000000000000000000000000000000000000081526004016114ba919061187c565b60405180910390fd5b8190506114cc565b5b9392505050565b6000815111156114e65780518082602001fd5b6040517f1425ea4200000000000000000000000000000000000000000000000000000000815260040160405180910390fd5b6040518060a00160405280606081526020016060815260200160608152602001600073ffffffffffffffffffffffffffffffffffffffff168152602001606081525090565b6040518060400160405280600073ffffffffffffffffffffffffffffffffffffffff168152602001600081525090565b6000604051905090565b600080fd5b600080fd5b60007fffffffff0000000000000000000000000000000000000000000000000000000082169050919050565b6115d6816115a1565b81146115e157600080fd5b50565b6000813590506115f3816115cd565b92915050565b60006020828403121561160f5761160e611597565b5b600061161d848285016115e4565b91505092915050565b60008115159050919050565b61163b81611626565b82525050565b60006020820190506116566000830184611632565b92915050565b6000819050919050565b61166f8161165c565b82525050565b600081519050919050565b600082825260208201905092915050565b60005b838110156116af578082015181840152602081019050611694565b60008484015250505050565b6000601f19601f8301169050919050565b60006116d782611675565b6116e18185611680565b93506116f1818560208601611691565b6116fa816116bb565b840191505092915050565b600060408201905061171a6000830185611666565b818103602083015261172c81846116cc565b90509392505050565b600073ffffffffffffffffffffffffffffffffffffffff82169050919050565b600061176082611735565b9050919050565b61177081611755565b811461177b57600080fd5b50565b60008135905061178d81611767565b92915050565b600080604083850312156117aa576117a9611597565b5b60006117b88582860161177e565b92505060206117c98582860161177e565b9150509250929050565b6000602082840312156117e9576117e8611597565b5b60006117f78482850161177e565b91505092915050565b600080fd5b600060a0828403121561181b5761181a611800565b5b81905092915050565b60006020828403121561183a57611839611597565b5b600082013567ffffffffffffffff8111156118585761185761159c565b5b61186484828501611805565b91505092915050565b61187681611755565b82525050565b6000602082019050611891600083018461186d565b92915050565b6000819050919050565b60006118bc6118b76118b284611735565b611897565b611735565b9050919050565b60006118ce826118a1565b9050919050565b60006118e0826118c3565b9050919050565b6118f0816118d5565b82525050565b600060208201905061190b60008301846118e7565b92915050565b6000819050919050565b61192481611911565b811461192f57600080fd5b50565b6000813590506119418161191b565b92915050565b600067ffffffffffffffff82169050919050565b61196481611947565b811461196f57600080fd5b50565b6000813590506119818161195b565b92915050565b600080600080608085870312156119a1576119a0611597565b5b60006119af87828801611932565b94505060206119c08782880161177e565b93505060406119d187828801611972565b92505060606119e28782880161177e565b91505092959194509250565b6000602082019050611a036000830184611666565b92915050565b7f4e487b7100000000000000000000000000000000000000000000000000000000600052602260045260246000fd5b60006002820490506001821680611a5057607f821691505b602082108103611a6357611a62611a09565b5b50919050565b600081519050611a788161191b565b92915050565b600060208284031215611a9457611a93611597565b5b6000611aa284828501611a69565b91505092915050565b600081905092915050565b50565b6000611ac6600083611aab565b9150611ad182611ab6565b600082019050919050565b6000611ae782611ab9565b9150819050919050565b611afa81611911565b82525050565b6000606082019050611b15600083018661186d565b611b22602083018561186d565b611b2f6040830184611af1565b949350505050565b7f4d7573742062652070726f706f736564206f776e657200000000000000000000600082015250565b6000611b6d601683611680565b9150611b7882611b37565b602082019050919050565b60006020820190508181036000830152611b9c81611b60565b9050919050565b600080fd5b7f4e487b7100000000000000000000000000000000000000000000000000000000600052604160045260246000fd5b611be0826116bb565b810181811067ffffffffffffffff82111715611bff57611bfe611ba8565b5b80604052505050565b6000611c1261158d565b9050611c1e8282611bd7565b919050565b600080fd5b611c318161165c565b8114611c3c57600080fd5b50565b600081359050611c4e81611c28565b92915050565b600080fd5b600080fd5b600067ffffffffffffffff821115611c7957611c78611ba8565b5b611c82826116bb565b9050602081019050919050565b82818337600083830152505050565b6000611cb1611cac84611c5e565b611c08565b905082815260208101848484011115611ccd57611ccc611c59565b5b611cd8848285611c8f565b509392505050565b600082601f830112611cf557611cf4611c54565b5b8135611d05848260208601611c9e565b91505092915050565b600067ffffffffffffffff821115611d2957611d28611ba8565b5b602082029050602081019050919050565b600080fd5b600060408284031215611d5557611d54611ba3565b5b611d5f6040611c08565b90506000611d6f8482850161177e565b6000830152506020611d8384828501611932565b60208301525092915050565b6000611da2611d9d84611d0e565b611c08565b90508083825260208201905060408402830185811115611dc557611dc4611d3a565b5b835b81811015611dee5780611dda8882611d3f565b845260208401935050604081019050611dc7565b5050509392505050565b600082601f830112611e0d57611e0c611c54565b5b8135611e1d848260208601611d8f565b91505092915050565b600060a08284031215611e3c57611e3b611ba3565b5b611e4660a0611c08565b90506000611e5684828501611c3f565b6000830152506020611e6a84828501611972565b602083015250604082013567ffffffffffffffff811115611e8e57611e8d611c23565b5b611e9a84828501611ce0565b604083015250606082013567ffffffffffffffff811115611ebe57611ebd611c23565b5b611eca84828501611ce0565b606083015250608082013567ffffffffffffffff811115611eee57611eed611c23565b5b611efa84828501611df8565b60808301525092915050565b6000611f123683611e26565b9050919050565b6000602082019050611f2e6000830184611af1565b92915050565b6000604082019050611f49600083018561186d565b611f566020830184611af1565b9392505050565b7f4f6e6c792063616c6c61626c65206279206f776e657200000000000000000000600082015250565b6000611f93601683611680565b9150611f9e82611f5d565b602082019050919050565b60006020820190508181036000830152611fc281611f86565b9050919050565b600081519050611fd881611767565b92915050565b600060408284031215611ff457611ff3611ba3565b5b611ffe6040611c08565b9050600061200e84828501611fc9565b600083015250602061202284828501611a69565b60208301525092915050565b60006040828403121561204457612043611597565b5b600061205284828501611fde565b91505092915050565b60006020828403121561207157612070611597565b5b600061207f84828501611fc9565b91505092915050565b61209181611947565b82525050565b600081519050919050565b600082825260208201905092915050565b60006120be82612097565b6120c881856120a2565b93506120d8818560208601611691565b6120e1816116bb565b840191505092915050565b600081519050919050565b600082825260208201905092915050565b6000819050602082019050919050565b61212181611755565b82525050565b61213081611911565b82525050565b60408201600082015161214c6000850182612118565b50602082015161215f6020850182612127565b50505050565b60006121718383612136565b60408301905092915050565b6000602082019050919050565b6000612195826120ec565b61219f81856120f7565b93506121aa83612108565b8060005b838110156121db5781516121c28882612165565b97506121cd8361217d565b9250506001810190506121ae565b5085935050505092915050565b600060a083016000830151848203600086015261220582826120b3565b9150506020830151848203602086015261221f82826120b3565b91505060408301518482036040860152612239828261218a565b915050606083015161224e6060860182612118565b506080830151848203608086015261226682826120b3565b9150508091505092915050565b60006040820190506122886000830185612088565b818103602083015261229a81846121e8565b90509392505050565b60006040820190506122b86000830185611af1565b6122c56020830184611af1565b9392505050565b6122d581611626565b81146122e057600080fd5b50565b6000815190506122f2816122cc565b92915050565b60006020828403121561230e5761230d611597565b5b600061231c848285016122e3565b91505092915050565b60008151905061233481611c28565b92915050565b6000602082840312156123505761234f611597565b5b600061235e84828501612325565b91505092915050565b600082825260208201905092915050565b600061238382612097565b61238d8185612367565b935061239d818560208601611691565b6123a6816116bb565b840191505092915050565b60006080820190506123c6600083018761186d565b81810360208301526123d88186612378565b90506123e7604083018561186d565b6123f46060830184611af1565b95945050505050565b7f43616e6e6f74207472616e7366657220746f2073656c66000000000000000000600082015250565b6000612433601783611680565b915061243e826123fd565b602082019050919050565b6000602082019050818103600083015261246281612426565b9050919050565b61247281611626565b82525050565b60408201600082015161248e6000850182612127565b5060208201516124a16020850182612469565b50505050565b60006040820190506124bc6000830184612478565b92915050565b60006124cd82612097565b6124d78185611aab565b93506124e7818560208601611691565b80840191505092915050565b60006124ff82846124c2565b91508190509291505056fea264697066735822122073ab9d5eb52ac60f3fcbb474ea007ed9e78af6aea9e9467b68cd9a62c94679f564736f6c634300081c0033";
+
+    public static final String FUNC_ACCEPTOWNERSHIP = "acceptOwnership";
+
+    public static final String FUNC_BURNANDSENDNFT = "burnAndSendNFT";
+
+    public static final String FUNC_GETLASTRECEIVEDMESSAGEDETAILS = "getLastReceivedMessageDetails";
+
+    public static final String FUNC_GETROUTER = "getRouter";
+
+    public static final String FUNC_OWNER = "owner";
+
+    public static final String FUNC_SUPPORTSINTERFACE = "supportsInterface";
+
+    public static final String FUNC_TRANSFEROWNERSHIP = "transferOwnership";
+
+    public static final String FUNC_WITHDRAW = "withdraw";
+
+    public static final String FUNC_WITHDRAWTOKEN = "withdrawToken";
+
+    public static final String FUNC_WNFT = "wnft";
+
+    public static final Event MESSAGESENT_EVENT = new Event("MessageSent", 
+            Arrays.<TypeReference<?>>asList(new TypeReference<Bytes32>(true) {}, new TypeReference<Uint64>(true) {}, new TypeReference<Address>() {}, new TypeReference<DynamicBytes>() {}, new TypeReference<Address>() {}, new TypeReference<Uint256>() {}));
+    ;
+
+    public static final Event OWNERSHIPTRANSFERREQUESTED_EVENT = new Event("OwnershipTransferRequested", 
+            Arrays.<TypeReference<?>>asList(new TypeReference<Address>(true) {}, new TypeReference<Address>(true) {}));
+    ;
+
+    public static final Event OWNERSHIPTRANSFERRED_EVENT = new Event("OwnershipTransferred", 
+            Arrays.<TypeReference<?>>asList(new TypeReference<Address>(true) {}, new TypeReference<Address>(true) {}));
+    ;
+
+    public static final Event TOKENMINTED_EVENT = new Event("TokenMinted", 
+            Arrays.<TypeReference<?>>asList(new TypeReference<Address>() {}, new TypeReference<Uint256>() {}));
+    ;
+
+    @Deprecated
+    protected NFTPoolBurnAndMint(String contractAddress, Web3j web3j, Credentials credentials, BigInteger gasPrice, BigInteger gasLimit) {
+        super(BINARY, contractAddress, web3j, credentials, gasPrice, gasLimit);
+    }
+
+    protected NFTPoolBurnAndMint(String contractAddress, Web3j web3j, Credentials credentials, ContractGasProvider contractGasProvider) {
+        super(BINARY, contractAddress, web3j, credentials, contractGasProvider);
+    }
+
+    @Deprecated
+    protected NFTPoolBurnAndMint(String contractAddress, Web3j web3j, TransactionManager transactionManager, BigInteger gasPrice, BigInteger gasLimit) {
+        super(BINARY, contractAddress, web3j, transactionManager, gasPrice, gasLimit);
+    }
+
+    protected NFTPoolBurnAndMint(String contractAddress, Web3j web3j, TransactionManager transactionManager, ContractGasProvider contractGasProvider) {
+        super(BINARY, contractAddress, web3j, transactionManager, contractGasProvider);
+    }
+
+    public List<MessageSentEventResponse> getMessageSentEvents(TransactionReceipt transactionReceipt) {
+        List<Contract.EventValuesWithLog> valueList = extractEventParametersWithLog(MESSAGESENT_EVENT, transactionReceipt);
+        ArrayList<MessageSentEventResponse> responses = new ArrayList<MessageSentEventResponse>(valueList.size());
+        for (Contract.EventValuesWithLog eventValues : valueList) {
+            MessageSentEventResponse typedResponse = new MessageSentEventResponse();
+            typedResponse.log = eventValues.getLog();
+            typedResponse.messageId = (byte[]) eventValues.getIndexedValues().get(0).getValue();
+            typedResponse.destinationChainSelector = (BigInteger) eventValues.getIndexedValues().get(1).getValue();
+            typedResponse.receiver = (String) eventValues.getNonIndexedValues().get(0).getValue();
+            typedResponse.text = (byte[]) eventValues.getNonIndexedValues().get(1).getValue();
+            typedResponse.feeToken = (String) eventValues.getNonIndexedValues().get(2).getValue();
+            typedResponse.fees = (BigInteger) eventValues.getNonIndexedValues().get(3).getValue();
+            responses.add(typedResponse);
+        }
+        return responses;
+    }
+
+    public Flowable<MessageSentEventResponse> messageSentEventFlowable(EthFilter filter) {
+        return web3j.ethLogFlowable(filter).map(new Function<Log, MessageSentEventResponse>() {
+            @Override
+            public MessageSentEventResponse apply(Log log) {
+                Contract.EventValuesWithLog eventValues = extractEventParametersWithLog(MESSAGESENT_EVENT, log);
+                MessageSentEventResponse typedResponse = new MessageSentEventResponse();
+                typedResponse.log = log;
+                typedResponse.messageId = (byte[]) eventValues.getIndexedValues().get(0).getValue();
+                typedResponse.destinationChainSelector = (BigInteger) eventValues.getIndexedValues().get(1).getValue();
+                typedResponse.receiver = (String) eventValues.getNonIndexedValues().get(0).getValue();
+                typedResponse.text = (byte[]) eventValues.getNonIndexedValues().get(1).getValue();
+                typedResponse.feeToken = (String) eventValues.getNonIndexedValues().get(2).getValue();
+                typedResponse.fees = (BigInteger) eventValues.getNonIndexedValues().get(3).getValue();
+                return typedResponse;
+            }
+        });
+    }
+
+    public Flowable<MessageSentEventResponse> messageSentEventFlowable(DefaultBlockParameter startBlock, DefaultBlockParameter endBlock) {
+        EthFilter filter = new EthFilter(startBlock, endBlock, getContractAddress());
+        filter.addSingleTopic(EventEncoder.encode(MESSAGESENT_EVENT));
+        return messageSentEventFlowable(filter);
+    }
+
+    public List<OwnershipTransferRequestedEventResponse> getOwnershipTransferRequestedEvents(TransactionReceipt transactionReceipt) {
+        List<Contract.EventValuesWithLog> valueList = extractEventParametersWithLog(OWNERSHIPTRANSFERREQUESTED_EVENT, transactionReceipt);
+        ArrayList<OwnershipTransferRequestedEventResponse> responses = new ArrayList<OwnershipTransferRequestedEventResponse>(valueList.size());
+        for (Contract.EventValuesWithLog eventValues : valueList) {
+            OwnershipTransferRequestedEventResponse typedResponse = new OwnershipTransferRequestedEventResponse();
+            typedResponse.log = eventValues.getLog();
+            typedResponse.from = (String) eventValues.getIndexedValues().get(0).getValue();
+            typedResponse.to = (String) eventValues.getIndexedValues().get(1).getValue();
+            responses.add(typedResponse);
+        }
+        return responses;
+    }
+
+    public Flowable<OwnershipTransferRequestedEventResponse> ownershipTransferRequestedEventFlowable(EthFilter filter) {
+        return web3j.ethLogFlowable(filter).map(new Function<Log, OwnershipTransferRequestedEventResponse>() {
+            @Override
+            public OwnershipTransferRequestedEventResponse apply(Log log) {
+                Contract.EventValuesWithLog eventValues = extractEventParametersWithLog(OWNERSHIPTRANSFERREQUESTED_EVENT, log);
+                OwnershipTransferRequestedEventResponse typedResponse = new OwnershipTransferRequestedEventResponse();
+                typedResponse.log = log;
+                typedResponse.from = (String) eventValues.getIndexedValues().get(0).getValue();
+                typedResponse.to = (String) eventValues.getIndexedValues().get(1).getValue();
+                return typedResponse;
+            }
+        });
+    }
+
+    public Flowable<OwnershipTransferRequestedEventResponse> ownershipTransferRequestedEventFlowable(DefaultBlockParameter startBlock, DefaultBlockParameter endBlock) {
+        EthFilter filter = new EthFilter(startBlock, endBlock, getContractAddress());
+        filter.addSingleTopic(EventEncoder.encode(OWNERSHIPTRANSFERREQUESTED_EVENT));
+        return ownershipTransferRequestedEventFlowable(filter);
+    }
+
+    public List<OwnershipTransferredEventResponse> getOwnershipTransferredEvents(TransactionReceipt transactionReceipt) {
+        List<Contract.EventValuesWithLog> valueList = extractEventParametersWithLog(OWNERSHIPTRANSFERRED_EVENT, transactionReceipt);
+        ArrayList<OwnershipTransferredEventResponse> responses = new ArrayList<OwnershipTransferredEventResponse>(valueList.size());
+        for (Contract.EventValuesWithLog eventValues : valueList) {
+            OwnershipTransferredEventResponse typedResponse = new OwnershipTransferredEventResponse();
+            typedResponse.log = eventValues.getLog();
+            typedResponse.from = (String) eventValues.getIndexedValues().get(0).getValue();
+            typedResponse.to = (String) eventValues.getIndexedValues().get(1).getValue();
+            responses.add(typedResponse);
+        }
+        return responses;
+    }
+
+    public Flowable<OwnershipTransferredEventResponse> ownershipTransferredEventFlowable(EthFilter filter) {
+        return web3j.ethLogFlowable(filter).map(new Function<Log, OwnershipTransferredEventResponse>() {
+            @Override
+            public OwnershipTransferredEventResponse apply(Log log) {
+                Contract.EventValuesWithLog eventValues = extractEventParametersWithLog(OWNERSHIPTRANSFERRED_EVENT, log);
+                OwnershipTransferredEventResponse typedResponse = new OwnershipTransferredEventResponse();
+                typedResponse.log = log;
+                typedResponse.from = (String) eventValues.getIndexedValues().get(0).getValue();
+                typedResponse.to = (String) eventValues.getIndexedValues().get(1).getValue();
+                return typedResponse;
+            }
+        });
+    }
+
+    public Flowable<OwnershipTransferredEventResponse> ownershipTransferredEventFlowable(DefaultBlockParameter startBlock, DefaultBlockParameter endBlock) {
+        EthFilter filter = new EthFilter(startBlock, endBlock, getContractAddress());
+        filter.addSingleTopic(EventEncoder.encode(OWNERSHIPTRANSFERRED_EVENT));
+        return ownershipTransferredEventFlowable(filter);
+    }
+
+    public List<TokenMintedEventResponse> getTokenMintedEvents(TransactionReceipt transactionReceipt) {
+        List<Contract.EventValuesWithLog> valueList = extractEventParametersWithLog(TOKENMINTED_EVENT, transactionReceipt);
+        ArrayList<TokenMintedEventResponse> responses = new ArrayList<TokenMintedEventResponse>(valueList.size());
+        for (Contract.EventValuesWithLog eventValues : valueList) {
+            TokenMintedEventResponse typedResponse = new TokenMintedEventResponse();
+            typedResponse.log = eventValues.getLog();
+            typedResponse.newOwner = (String) eventValues.getNonIndexedValues().get(0).getValue();
+            typedResponse.tokenId = (BigInteger) eventValues.getNonIndexedValues().get(1).getValue();
+            responses.add(typedResponse);
+        }
+        return responses;
+    }
+
+    public Flowable<TokenMintedEventResponse> tokenMintedEventFlowable(EthFilter filter) {
+        return web3j.ethLogFlowable(filter).map(new Function<Log, TokenMintedEventResponse>() {
+            @Override
+            public TokenMintedEventResponse apply(Log log) {
+                Contract.EventValuesWithLog eventValues = extractEventParametersWithLog(TOKENMINTED_EVENT, log);
+                TokenMintedEventResponse typedResponse = new TokenMintedEventResponse();
+                typedResponse.log = log;
+                typedResponse.newOwner = (String) eventValues.getNonIndexedValues().get(0).getValue();
+                typedResponse.tokenId = (BigInteger) eventValues.getNonIndexedValues().get(1).getValue();
+                return typedResponse;
+            }
+        });
+    }
+
+    public Flowable<TokenMintedEventResponse> tokenMintedEventFlowable(DefaultBlockParameter startBlock, DefaultBlockParameter endBlock) {
+        EthFilter filter = new EthFilter(startBlock, endBlock, getContractAddress());
+        filter.addSingleTopic(EventEncoder.encode(TOKENMINTED_EVENT));
+        return tokenMintedEventFlowable(filter);
+    }
+
+    public RemoteFunctionCall<TransactionReceipt> acceptOwnership() {
+        final org.web3j.abi.datatypes.Function function = new org.web3j.abi.datatypes.Function(
+                FUNC_ACCEPTOWNERSHIP, 
+                Arrays.<Type>asList(), 
+                Collections.<TypeReference<?>>emptyList());
+        return executeRemoteCallTransaction(function);
+    }
+
+    public RemoteFunctionCall<TransactionReceipt> burnAndSendNFT(BigInteger tokenId, String newOwner, BigInteger chainSelector, String receiver) {
+        final org.web3j.abi.datatypes.Function function = new org.web3j.abi.datatypes.Function(
+                FUNC_BURNANDSENDNFT, 
+                Arrays.<Type>asList(new org.web3j.abi.datatypes.generated.Uint256(tokenId), 
+                new org.web3j.abi.datatypes.Address(160, newOwner), 
+                new org.web3j.abi.datatypes.generated.Uint64(chainSelector), 
+                new org.web3j.abi.datatypes.Address(160, receiver)), 
+                Collections.<TypeReference<?>>emptyList());
+        return executeRemoteCallTransaction(function);
+    }
+
+    public RemoteFunctionCall<Tuple2<byte[], String>> getLastReceivedMessageDetails() {
+        final org.web3j.abi.datatypes.Function function = new org.web3j.abi.datatypes.Function(FUNC_GETLASTRECEIVEDMESSAGEDETAILS, 
+                Arrays.<Type>asList(), 
+                Arrays.<TypeReference<?>>asList(new TypeReference<Bytes32>() {}, new TypeReference<Utf8String>() {}));
+        return new RemoteFunctionCall<Tuple2<byte[], String>>(function,
+                new Callable<Tuple2<byte[], String>>() {
+                    @Override
+                    public Tuple2<byte[], String> call() throws Exception {
+                        List<Type> results = executeCallMultipleValueReturn(function);
+                        return new Tuple2<byte[], String>(
+                                (byte[]) results.get(0).getValue(), 
+                                (String) results.get(1).getValue());
+                    }
+                });
+    }
+
+    public RemoteFunctionCall<String> getRouter() {
+        final org.web3j.abi.datatypes.Function function = new org.web3j.abi.datatypes.Function(FUNC_GETROUTER, 
+                Arrays.<Type>asList(), 
+                Arrays.<TypeReference<?>>asList(new TypeReference<Address>() {}));
+        return executeRemoteCallSingleValueReturn(function, String.class);
+    }
+
+    public RemoteFunctionCall<String> owner() {
+        final org.web3j.abi.datatypes.Function function = new org.web3j.abi.datatypes.Function(FUNC_OWNER, 
+                Arrays.<Type>asList(), 
+                Arrays.<TypeReference<?>>asList(new TypeReference<Address>() {}));
+        return executeRemoteCallSingleValueReturn(function, String.class);
+    }
+
+    public RemoteFunctionCall<Boolean> supportsInterface(byte[] interfaceId) {
+        final org.web3j.abi.datatypes.Function function = new org.web3j.abi.datatypes.Function(FUNC_SUPPORTSINTERFACE, 
+                Arrays.<Type>asList(new org.web3j.abi.datatypes.generated.Bytes4(interfaceId)), 
+                Arrays.<TypeReference<?>>asList(new TypeReference<Bool>() {}));
+        return executeRemoteCallSingleValueReturn(function, Boolean.class);
+    }
+
+    public RemoteFunctionCall<TransactionReceipt> transferOwnership(String to) {
+        final org.web3j.abi.datatypes.Function function = new org.web3j.abi.datatypes.Function(
+                FUNC_TRANSFEROWNERSHIP, 
+                Arrays.<Type>asList(new org.web3j.abi.datatypes.Address(160, to)), 
+                Collections.<TypeReference<?>>emptyList());
+        return executeRemoteCallTransaction(function);
+    }
+
+    public RemoteFunctionCall<TransactionReceipt> withdraw(String _beneficiary) {
+        final org.web3j.abi.datatypes.Function function = new org.web3j.abi.datatypes.Function(
+                FUNC_WITHDRAW, 
+                Arrays.<Type>asList(new org.web3j.abi.datatypes.Address(160, _beneficiary)), 
+                Collections.<TypeReference<?>>emptyList());
+        return executeRemoteCallTransaction(function);
+    }
+
+    public RemoteFunctionCall<TransactionReceipt> withdrawToken(String _beneficiary, String _token) {
+        final org.web3j.abi.datatypes.Function function = new org.web3j.abi.datatypes.Function(
+                FUNC_WITHDRAWTOKEN, 
+                Arrays.<Type>asList(new org.web3j.abi.datatypes.Address(160, _beneficiary), 
+                new org.web3j.abi.datatypes.Address(160, _token)), 
+                Collections.<TypeReference<?>>emptyList());
+        return executeRemoteCallTransaction(function);
+    }
+
+    public RemoteFunctionCall<String> wnft() {
+        final org.web3j.abi.datatypes.Function function = new org.web3j.abi.datatypes.Function(FUNC_WNFT, 
+                Arrays.<Type>asList(), 
+                Arrays.<TypeReference<?>>asList(new TypeReference<Address>() {}));
+        return executeRemoteCallSingleValueReturn(function, String.class);
+    }
+
+    @Deprecated
+    public static NFTPoolBurnAndMint load(String contractAddress, Web3j web3j, Credentials credentials, BigInteger gasPrice, BigInteger gasLimit) {
+        return new NFTPoolBurnAndMint(contractAddress, web3j, credentials, gasPrice, gasLimit);
+    }
+
+    @Deprecated
+    public static NFTPoolBurnAndMint load(String contractAddress, Web3j web3j, TransactionManager transactionManager, BigInteger gasPrice, BigInteger gasLimit) {
+        return new NFTPoolBurnAndMint(contractAddress, web3j, transactionManager, gasPrice, gasLimit);
+    }
+
+    public static NFTPoolBurnAndMint load(String contractAddress, Web3j web3j, Credentials credentials, ContractGasProvider contractGasProvider) {
+        return new NFTPoolBurnAndMint(contractAddress, web3j, credentials, contractGasProvider);
+    }
+
+    public static NFTPoolBurnAndMint load(String contractAddress, Web3j web3j, TransactionManager transactionManager, ContractGasProvider contractGasProvider) {
+        return new NFTPoolBurnAndMint(contractAddress, web3j, transactionManager, contractGasProvider);
+    }
+
+    public static RemoteCall<NFTPoolBurnAndMint> deploy(Web3j web3j, Credentials credentials, ContractGasProvider contractGasProvider, String _router, String _link, String wnftAddress) {
+        String encodedConstructor = FunctionEncoder.encodeConstructor(Arrays.<Type>asList(new org.web3j.abi.datatypes.Address(160, _router), 
+                new org.web3j.abi.datatypes.Address(160, _link), 
+                new org.web3j.abi.datatypes.Address(160, wnftAddress)));
+        return deployRemoteCall(NFTPoolBurnAndMint.class, web3j, credentials, contractGasProvider, BINARY, encodedConstructor);
+    }
+
+    public static RemoteCall<NFTPoolBurnAndMint> deploy(Web3j web3j, TransactionManager transactionManager, ContractGasProvider contractGasProvider, String _router, String _link, String wnftAddress) {
+        String encodedConstructor = FunctionEncoder.encodeConstructor(Arrays.<Type>asList(new org.web3j.abi.datatypes.Address(160, _router), 
+                new org.web3j.abi.datatypes.Address(160, _link), 
+                new org.web3j.abi.datatypes.Address(160, wnftAddress)));
+        return deployRemoteCall(NFTPoolBurnAndMint.class, web3j, transactionManager, contractGasProvider, BINARY, encodedConstructor);
+    }
+
+    @Deprecated
+    public static RemoteCall<NFTPoolBurnAndMint> deploy(Web3j web3j, Credentials credentials, BigInteger gasPrice, BigInteger gasLimit, String _router, String _link, String wnftAddress) {
+        String encodedConstructor = FunctionEncoder.encodeConstructor(Arrays.<Type>asList(new org.web3j.abi.datatypes.Address(160, _router), 
+                new org.web3j.abi.datatypes.Address(160, _link), 
+                new org.web3j.abi.datatypes.Address(160, wnftAddress)));
+        return deployRemoteCall(NFTPoolBurnAndMint.class, web3j, credentials, gasPrice, gasLimit, BINARY, encodedConstructor);
+    }
+
+    @Deprecated
+    public static RemoteCall<NFTPoolBurnAndMint> deploy(Web3j web3j, TransactionManager transactionManager, BigInteger gasPrice, BigInteger gasLimit, String _router, String _link, String wnftAddress) {
+        String encodedConstructor = FunctionEncoder.encodeConstructor(Arrays.<Type>asList(new org.web3j.abi.datatypes.Address(160, _router), 
+                new org.web3j.abi.datatypes.Address(160, _link), 
+                new org.web3j.abi.datatypes.Address(160, wnftAddress)));
+        return deployRemoteCall(NFTPoolBurnAndMint.class, web3j, transactionManager, gasPrice, gasLimit, BINARY, encodedConstructor);
+    }
+
+    public static class MessageSentEventResponse extends BaseEventResponse {
+        public byte[] messageId;
+
+        public BigInteger destinationChainSelector;
+
+        public String receiver;
+
+        public byte[] text;
+
+        public String feeToken;
+
+        public BigInteger fees;
+    }
+
+    public static class OwnershipTransferRequestedEventResponse extends BaseEventResponse {
+        public String from;
+
+        public String to;
+    }
+
+    public static class OwnershipTransferredEventResponse extends BaseEventResponse {
+        public String from;
+
+        public String to;
+    }
+
+    public static class TokenMintedEventResponse extends BaseEventResponse {
+        public String newOwner;
+
+        public BigInteger tokenId;
+    }
+}
