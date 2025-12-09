@@ -1,5 +1,5 @@
 node_modules
-.env
+.env.enc
 deployments/
 
 # Hardhat files
@@ -16,3 +16,6 @@ deployments/
 
 # Hardhat Ignition default folder for deployments against a local node
 ignition/deployments/chain-31337
+
+/backend
+/target

@@ -23,13 +23,22 @@ module.exports = {
       chainId: 11155111,
       blockConfirmations: 6,
       companionNetworks:{
-        destChain:"amoy"
+        destChain:"monad"
       }
     },
-    amoy:{
-      url: AMOY_RPC_URL,
-      accounts: [PRIVATE_KEY] ,
-      chainId: 80002,
+    // amoy:{
+    //   url: AMOY_RPC_URL,
+    //   accounts: [PRIVATE_KEY] ,
+    //   chainId: 80002,
+    //   blockConfirmations: 6,
+    //   companionNetworks:{
+    //     destChain:"sepolia"
+    //   }
+    // },
+    monad:{
+      url: process.env.MONAD_RPC_URL,
+      accounts: [PRIVATE_KEY],
+      chainId: 10143,
       blockConfirmations: 6,
       companionNetworks:{
         destChain:"sepolia"

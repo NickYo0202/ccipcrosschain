@@ -26,35 +26,33 @@ task("lock-and-cross")
         console.log("using receiver address:",receiver);
           
         const tokenId = taskArgs.tokenid;
-        const nftPoolLockAndRelease = await hre.ethers.getContract("NFTPoolLockAndRelease",firstAccount);
-        console.log(`locking and crossing NFT tokenId ${tokenId} to chain ${chainselector} receiver ${receiver}`);
-        const tx = await nftPoolLockAndRelease.lockAndCrossNFT(chainselector,receiver,tokenId);
-        await tx.wait(5);
-        console.log(`locked and crossed NFT tokenId ${tokenId} to chain ${chainselector} receiver ${receiver}`);
+        const signer = await hre.ethers.getSigner(firstAccount);
+        const nftPoolLockAndRelease = await hre.ethers.getContract("NFTPoolLockAndRelease",signer);
 
-        //transfer link token to address of the pool
+        // 1. Approve NFT
+        const nft = await hre.ethers.getContract("MyToken",signer);
+        console.log(`Approving NFT tokenId ${tokenId} to NFTPoolLockAndRelease contract...`);
+        const approvalTx = await nft.approve(nftPoolLockAndRelease.target,tokenId);
+        await approvalTx.wait(2);
+        console.log(`Approved NFT`);
+
+        // 2. Fund with LINK
         const linkTokenAddress = networkConfig[hre.network.config.chainId].linkToken;
-        const linkToken = await hre.ethers.getContractAt("LinkToken",linkTokenAddress,firstAccount);
-        const fee = await nftPoolLockAndRelease.crossChainFee(chainselector);
-        console.log(`transferring ${fee} LINK to NFTPoolLockAndRelease contract at ${nftPoolLockAndRelease.address}`);
-        const tx2 = await linkToken.transfer(nftPoolLockAndRelease.address,fee);
-        await tx2.wait(5);
-        const balance = await linkToken.balanceOf(nftPoolLockAndRelease.address);
-        console.log(`NFTPoolLockAndRelease contract LINK balance: ${balance}`);
-        console.log("transferred LINK to NFTPoolLockAndRelease contract");
-        //approve pool address to call transferFrom
-        const nft = await hre.ethers.getContract("MyToken",firstAccount);
-        const isApproved = await nft.approve(nftPoolLockAndRelease.address,tokenId);
-        console.log(`approved NFT tokenId ${tokenId} to NFTPoolLockAndRelease contract: ${isApproved}`);
+        const linkToken = await hre.ethers.getContractAt("LinkToken",linkTokenAddress,signer);
+        
+        // Hardcode fee to 2 LINK for simplicity
+        const fee = hre.ethers.parseEther("2"); 
+        
+        console.log(`Transferring ${hre.ethers.formatEther(fee)} LINK to NFTPoolLockAndRelease contract at ${nftPoolLockAndRelease.target}`);
+        const transferTx = await linkToken.transfer(nftPoolLockAndRelease.target,fee);
+        await transferTx.wait(1);
+        console.log(`Transferred LINK`);
 
-        //call locakAndSendNFT
-        const tx3 = await nftPoolLockAndRelease.lockAndSendNFT(
-            tokenId,
-            firstAccount,
-            chainselector,
-            receiver);
-        await tx3.wait(3);
-        console.log(`ccip transfer request sent,and the tx hash is ${tx3.hash}`);
+        // 3. Lock and Send
+        console.log(`Locking and crossing NFT tokenId ${tokenId} to chain ${chainselector} receiver ${receiver}`);
+        const tx = await nftPoolLockAndRelease.lockAndSendNFT(tokenId,firstAccount,chainselector,receiver);
+        await tx.wait(5);
+        console.log(`CCIP transfer request sent, tx hash: ${tx.hash}`);
       });
 
       module.exports={};

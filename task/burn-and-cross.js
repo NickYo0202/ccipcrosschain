@@ -20,33 +20,32 @@ task("burn-and-cross")
            receiver = taskArgs.receiver
         }else{
            const nftPoolLockAndReleaseDeployment = await hre.companionNetworks["destChain"].deployments.get("NFTPoolLockAndRelease");
-           receiver = nftPoolLockAndReleaseDeployment.address;
+           receiver = nftPoolLockAndReleaseDeployment.target;
            console.log("receiver is not set in command");
         }
         console.log("using receiver address:",receiver);
           
         const tokenId = taskArgs.tokenid;
         const nftPoolBurnAndMint = await hre.ethers.getContract("NFTPoolBurnAndMint",firstAccount);
+        const signer = await hre.ethers.getSigner(firstAccount);
         console.log(`locking and crossing NFT tokenId ${tokenId} to chain ${chainselector} receiver ${receiver}`);
-        const tx = await nftPoolBurnAndMint.lockAndCrossNFT(chainselector,receiver,tokenId);
-        await tx.wait(5);
-        console.log(`locked and crossed NFT tokenId ${tokenId} to chain ${chainselector} receiver ${receiver}`);
+        
+        //1.approve NFT
+        const wnft = await hre.ethers.getContract("WrappedMyToken",signer);
+        console.log(`approving NFT tokenId ${tokenId} to NFTPoolBurnAndMint contract...`);
+        const approvalTx = await wnft.approve(nftPoolBurnAndMint.target,tokenId);
+        await approvalTx.wait(2);
+        console.log(`approved NFT`);
 
-        //transfer link token to address of the pool
+        //2.fund with LINK
         const linkTokenAddress = networkConfig[hre.network.config.chainId].linkToken;
-        const linkToken = await hre.ethers.getContractAt("LinkToken",linkTokenAddress,firstAccount);
-        const fee = await nftPoolBurnAndMint.crossChainFee(chainselector);
-        console.log(`transferring ${fee} LINK to NFTPoolBurnAndMint contract at ${nftPoolBurnAndMint.address}`);
-        const tx2 = await linkToken.transfer(nftPoolBurnAndMint.address,fee);
-        await tx2.wait(5);
-        const balance = await linkToken.balanceOf(nftPoolBurnAndMint.address);
-        console.log(`NFTPoolBurnAndMint contract LINK balance: ${balance}`);
-        console.log("transferred LINK to NFTPoolBurnAndMint contract");
-        //approve pool address to call transferFrom
-        const wnft = await hre.ethers.getContract("WrappedMyToken",firstAccount);
-        const isApproved = await wnft.approve(nftPoolBurnAndMint.address,tokenId);
-        console.log(`approved NFT tokenId ${tokenId} to NFTPoolBurnAndMint contract: ${isApproved}`);
-        //call locakAndSendNFT
+        const linkToken = await hre.ethers.getContractAt("LinkToken",linkTokenAddress,signer);
+        const fee = hre.ethers.parseEther("2");
+        console.log(`transferring ${fee} LINK to NFTPoolBurnAndMint contract at ${nftPoolBurnAndMint.target}`);
+        const tx2 = await linkToken.transfer(nftPoolBurnAndMint.target,fee);
+        await tx2.wait(3);
+
+        //3.lock and send
         const tx3 = await nftPoolBurnAndMint.burnAndSendNFT(
             tokenId,
             firstAccount,
